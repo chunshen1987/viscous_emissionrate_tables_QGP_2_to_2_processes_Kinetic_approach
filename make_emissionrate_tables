@@ -1,0 +1,111 @@
+SHELL=/bin/sh
+
+# This file contains a set of rules used by the "make"
+#   command.  This makefile $(MAKEFILE) tells "make" how the
+#   executable diffeq_oscillations $(COMMAND) should be created
+#   from the source files $(SRCS) via the object
+#   files $(OBJS) and the header files $(HDRS); type the command:
+#        "make -f make_diffeq_oscillations"
+#   where make_diffeq_oscillations should be replaced by the name of
+#   the makefile.
+# 
+# This file also tells make what to do if arguments
+#   follow the "make" command.
+#
+# To remove the OBJS files; type the command:
+#        "make -f make_diffeq_oscillations clean"
+#
+# To create a zip archive with name $(COMMAND).zip containing this 
+#   makefile and the SRCS and HDRS files, type the command:
+#        "make -f make_diffeq_oscillations zip"
+ 
+# The name of this makefile
+MAKEFILE= make_emissionrate_tables
+
+# The command you type to run the program (executable name)
+COMMAND= cal_photon_emissionrate_tables
+
+# Here are the C++ (or whatever) source files to be compiled, with \'s as
+#  continuation lines.  If you get a "missing separator" error pointing 
+#  to a line here, make sure that each \ has NO spaces following it.
+ 
+SRCS= \
+main.cpp \
+Arsenal.cpp \
+gauss_quadrature.cpp \
+Matrix_elements_sq.cpp \
+Phasespace_integrals.cpp \
+Table2D.cpp
+  
+OBJS= \
+main.o \
+Arsenal.o \
+Matrix_elements_sq.o \
+Phasespace_integrals.o \
+gauss_quadrature.o \
+Table2D.o
+
+HDRS= \
+Arsenal.h \
+parameters.h \
+Stopwatch.h \
+Matrix_elements_sq.h \
+Phasespace_integrals.h \
+gauss_quadrature.h \
+Table2D.h
+
+###########################################################################
+# Commands and options for compiling
+########################################################################### 
+OBJS= $(addsuffix .o, $(basename $(SRCS)))
+ 
+CC= g++
+CFLAGS= -O3 
+WARNFLAGS= -Wall -W -Wshadow -fno-common
+MOREFLAGS= -ansi -pedantic -Wpointer-arith -Wcast-qual -Wcast-align \
+           -Wwrite-strings -fshort-enums 
+LDFLAGS=
+#LDFLAGS= -lgsl -lgslcblas 
+#LIBS= -L/sw/lib -I/sw/include
+ 
+###########################################################################
+# Instructions to compile and link -- allow for different dependencies
+########################################################################### 
+ 
+#$(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
+#	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(LIBS)
+
+$(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
+	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS)
+
+main.o : main.cpp Arsenal.h Stopwatch.h gauss_quadrature.cpp parameters.h Matrix_elements_sq.cpp $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c main.cpp -o main.o
+                 
+Arsenal.o : Arsenal.cpp gauss_quadrature.cpp Arsenal.h $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c Arsenal.cpp -o Arsenal.o
+
+gauss_quadrature.o : gauss_quadrature.cpp gauss_quadrature.h $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c gauss_quadrature.cpp -o gauss_quadrature.o
+
+Matrix_elements_sq.o : Matrix_elements_sq.cpp Matrix_elements_sq.h Arsenal.h parameters.h $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c Matrix_elements_sq.cpp -o Matrix_elements_sq.o
+
+Phasespace_integrals.o : Phasespace_integrals.cpp gauss_quadrature.cpp parameters.h Matrix_elements_sq.h Arsenal.h $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c Phasespace_integrals.cpp -o Phasespace_integrals.o
+
+Table2D.o : Table2D.cpp Arsenal.h Table2D.h $(MAKEFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c Table2D.cpp -o Table2D.o
+
+##########################################################################
+# Additional tasks 
+##########################################################################
+ 
+clean:
+	rm -f $(OBJS)
+  
+zip:
+	zip -r $(COMMAND).zip $(MAKEFILE) $(SRCS) $(HDRS)
+
+##########################################################################
+# End of makefile 
+##########################################################################

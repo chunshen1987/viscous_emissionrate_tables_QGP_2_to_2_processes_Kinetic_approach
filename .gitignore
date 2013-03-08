@@ -1,0 +1,5 @@
+*.[oa]
+*.~
+*.dat
+.DS_Store
+results/
