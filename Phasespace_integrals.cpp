@@ -83,8 +83,8 @@ int Calculate_emissionrates(int channel, string filename)
              viscous_result2_s += viscous_result2_t*s_weight[k];
           }
           equilibrium_results[i][j] = equilibrium_result_s*prefactor/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
-          viscous_results1[i][j] = viscous_result1_s*prefactor/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
-          viscous_results2[i][j] = viscous_result2_s*prefactor/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
+          viscous_results1[i][j] = viscous_result1_s*prefactor/(Eq*Eq)/pow(hbarC, 4); // convert units to 1/(GeV^4 fm^4) for the emission rates
+          viscous_results2[i][j] = viscous_result2_s*prefactor/(Eq*Eq)/pow(hbarC, 4); // convert units to 1/(GeV^4 fm^4) for the emission rates
       }
    }
 
@@ -326,12 +326,8 @@ inline double viscous_integrand(double channel, double s, double t, double E1, d
    double p2 = E2;
    double p3 = E3;
    double costheta1 = (- s - t + 2*E1*Eq)/(2*p1*Eq + eps);
-   double sintheta1 = sqrt(1 - costheta1*costheta1);
    double costheta2 = (t + 2*E2*Eq)/(2*p2*Eq + eps);
-   double sintheta2 = sqrt(1 - costheta2*costheta2);
    double p3_z = p1*costheta1 + p2*costheta2 - Eq; 
-   double cosphi = (- s - 2*E1*E2 - 2*p1*p2*costheta1*costheta2)
-                   /(2*p1*p2*sintheta1*sintheta2 + eps);
    double integrand;
    if(channel == 1)
    {
