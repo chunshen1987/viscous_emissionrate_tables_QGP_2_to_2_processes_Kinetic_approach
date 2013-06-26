@@ -8,9 +8,6 @@
 #include <time.h>
 
 #include "Arsenal.h"
-#include "Matrix_elements_sq.h"
-#include "Phasespace_integrals.h"
-#include "parameters.h"
 #include "Stopwatch.h"
 #include "QGP_2to2_Scattering_Kinetic.h"
 #include "ParameterReader.h"
