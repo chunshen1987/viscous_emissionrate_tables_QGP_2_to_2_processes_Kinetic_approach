@@ -35,24 +35,30 @@ Arsenal.cpp \
 gauss_quadrature.cpp \
 Matrix_elements_sq.cpp \
 Phasespace_integrals.cpp \
-Table2D.cpp
+QGP_2to2_Scattering_Kinetic.cpp \
+ParameterReader.cpp \
+Physicalconstants.cpp
   
 OBJS= \
 main.o \
 Arsenal.o \
+gauss_quadrature.o \
 Matrix_elements_sq.o \
 Phasespace_integrals.o \
-gauss_quadrature.o \
-Table2D.o
+QGP_2to2_Scattering_Kinetic.o \
+ParameterReader.o \
+Physicalconstants.o
 
 HDRS= \
 Arsenal.h \
 parameters.h \
 Stopwatch.h \
+gauss_quadrature.h \
 Matrix_elements_sq.h \
 Phasespace_integrals.h \
-gauss_quadrature.h \
-Table2D.h
+QGP_2to2_Scattering_Kinetic.h \
+ParameterReader.h \
+Physicalconstants.h
 
 ###########################################################################
 # Commands and options for compiling
@@ -60,7 +66,7 @@ Table2D.h
 OBJS= $(addsuffix .o, $(basename $(SRCS)))
  
 CC= g++
-CFLAGS= -O3 
+CFLAGS= -g -O3
 WARNFLAGS= -Wall -W -Wshadow -fno-common
 MOREFLAGS= -ansi -pedantic -Wpointer-arith -Wcast-qual -Wcast-align \
            -Wwrite-strings -fshort-enums 
@@ -80,21 +86,27 @@ $(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE)
 
 main.o : main.cpp Arsenal.h Stopwatch.h gauss_quadrature.cpp parameters.h Matrix_elements_sq.cpp $(MAKEFILE)
 	$(CC) $(CFLAGS) $(WARNFLAGS) -c main.cpp -o main.o
+
+QGP_2to2_Scattering_Kinetic.o : QGP_2to2_Scattering_Kinetic.cpp QGP_2to2_Scattering_Kinetic.h gauss_quadrature.h ParameterReader.h Physicalconstants.h $(MAKEFFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c QGP_2to2_Scattering_Kinetic.cpp -o QGP_2to2_Scattering_Kinetic.o
+
+ParameterReader.o : ParameterReader.h $(MAKEFFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c ParameterReader.cpp -o ParameterReader.o
                  
+Physicalconstants.o : Physicalconstants.h $(MAKEFFILE)
+	$(CC) $(CFLAGS) $(WARNFLAGS) -c Physicalconstants.cpp -o Physicalconstants.o
+
 Arsenal.o : Arsenal.cpp gauss_quadrature.cpp Arsenal.h $(MAKEFILE)
 	$(CC) $(CFLAGS) $(WARNFLAGS) -c Arsenal.cpp -o Arsenal.o
 
 gauss_quadrature.o : gauss_quadrature.cpp gauss_quadrature.h $(MAKEFILE)
 	$(CC) $(CFLAGS) $(WARNFLAGS) -c gauss_quadrature.cpp -o gauss_quadrature.o
 
-Matrix_elements_sq.o : Matrix_elements_sq.cpp Matrix_elements_sq.h Arsenal.h parameters.h $(MAKEFILE)
+Matrix_elements_sq.o : Matrix_elements_sq.cpp parameters.h Arsenal.h $(MAKEFILE)
 	$(CC) $(CFLAGS) $(WARNFLAGS) -c Matrix_elements_sq.cpp -o Matrix_elements_sq.o
 
-Phasespace_integrals.o : Phasespace_integrals.cpp gauss_quadrature.cpp parameters.h Matrix_elements_sq.h Arsenal.h $(MAKEFILE)
+Phasespace_integrals.o : Phasespace_integrals.cpp Matrix_elements_sq.h gauss_quadrature.cpp parameters.h Arsenal.h $(MAKEFILE)
 	$(CC) $(CFLAGS) $(WARNFLAGS) -c Phasespace_integrals.cpp -o Phasespace_integrals.o
-
-Table2D.o : Table2D.cpp Arsenal.h Table2D.h $(MAKEFILE)
-	$(CC) $(CFLAGS) $(WARNFLAGS) -c Table2D.cpp -o Table2D.o
 
 ##########################################################################
 # Additional tasks 

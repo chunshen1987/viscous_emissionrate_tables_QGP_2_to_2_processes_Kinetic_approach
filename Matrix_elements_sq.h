@@ -3,19 +3,8 @@
 
 #include "parameters.h"
 #include "Arsenal.h"
-typedef struct
-{
-   double Re_A0;
-   double Im_A0;
-   double Re_B0;
-   double Im_B0;
-   double Re_A1;
-   double Im_A1;
-   double Re_B1;
-   double Im_B1;
-   double Re_C1;
-   double Im_C1;
-}Selfenergy_coefficients;
+#include "QGP_2to2_Scattering_Kinetic.h"
+
 
 void Matrix_elements_sq(int channel, double s, double t, double E1, double E2, double Eq, double T, double* result_ptr);
 void Matrix_elements_sq_Compton(double s, double t, double E1, double E2, double Eq, double T, double* result_ptr);

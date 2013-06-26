@@ -8,6 +8,8 @@
 #include <time.h>
 
 #include "Phasespace_integrals.h"
+#include "gauss_quadrature.h"
+
 using namespace std;
 
 int Calculate_emissionrates(int channel, string filename)
@@ -85,6 +87,8 @@ int Calculate_emissionrates(int channel, string filename)
           equilibrium_results[i][j] = equilibrium_result_s*prefactor/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
           viscous_results1[i][j] = viscous_result1_s*prefactor/(Eq*Eq)/pow(hbarC, 4); // convert units to 1/(GeV^4 fm^4) for the emission rates
           viscous_results2[i][j] = viscous_result2_s*prefactor/(Eq*Eq)/pow(hbarC, 4); // convert units to 1/(GeV^4 fm^4) for the emission rates
+          cout << Eq << "  " << T << "  " << equilibrium_results[i][j] << "   " << viscous_results1[i][j]*1. + 1.*viscous_results2[i][j]<< endl;
+          exit(0);
       }
    }
 
@@ -207,6 +211,7 @@ double Integrate_E1(double Eq, double T, int channel, double s, double t, double
    }
    
    double slope = 1./T;
+   slope = 1.0;
    scale_gausspoints(n_E1, 5, 0.0, 0.0, E1_min, slope, E1_pt, E1_weight);
    
    for(int i=0; i<n_E1; i++)

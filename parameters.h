@@ -20,17 +20,17 @@ const double deltaf_alpha = 2;   //the exponent of the p dependence of the delta
 const double q_cutoff = 0.0;
 const int n_s = 100;
 const double s_max = 50.0;
-const int n_t = 20;
+const int n_t = 40;
 
-const int n_E1 = 20;
-const int n_E2 = 20;
+const int n_E1 = 80;
+const int n_E2 = 40;
 
 // parameters for output photon emission rate table
-const int n_Eq = 80;
-const double Eq_i = 0.05;
+const int n_Eq = 1;
+const double Eq_i = 3.0;
 const double dEq = 0.05;
 const int n_Temp = 1;
-const double T_i = 0.3;
+const double T_i = 1.0;
 const double dT = 0.2;
 
 #endif

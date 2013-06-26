@@ -102,7 +102,7 @@ vector< vector<double>* >* readBlockData(istream &stream_in)
 // is stored in a vector<double> array and the collection is the returned
 // object. Data are read from the input stream "stream_in". Each line
 // of data is processed by the stringToDoubles function. Note that the
-// data block is dynamicall allocated and is not release within the
+// data block is dynamically allocated and is not release within the
 // function.
 // Note that all "vectors" are "new" so don't forget to delete them.
 // Note also that the last line of data needs a return in order to be read.
@@ -545,5 +545,70 @@ long binarySearch(vector<double>* A, double value)
      idx = (int) floor((idx_f+idx_i)/2.);
    }
    return(idx_i);
+}
+
+void outputFunctionerror(string function_name, string massage, double value, int level)
+{
+   switch(level)
+   {
+      case 0:
+         break;
+      case 1:
+         cout << ">>> Warning: " << function_name << endl; 
+         cout << ">>> Message: " << massage << endl;
+         cout << ">>> Related value: " << value << endl;
+         break;
+      case 2:
+         cout << ">>> Error: " << function_name << endl; 
+         cout << ">>> Message: " << massage << endl;
+         cout << ">>> Related value: " << value << endl;
+         break;
+      case 3:
+         cout << ">>> Fatal Error: " << function_name << endl; 
+         cout << ">>> Message: " << massage << endl;
+         cout << ">>> Related value: " << value << endl;
+         exit(1);
+         break;
+      default:
+         cout << ">>> Error: outputFunctionerror:" << endl;
+         cout << ">>> Message: wrong errorLevel" << endl;
+         cout << ">>> Related value: " << level << endl;
+         exit(1);
+         break;
+   }
+}
+
+//**********************************************************************
+string toLower(string str)
+// Convert all character in string to lower case
+{
+  string tmp = str;
+  for (string::iterator it=tmp.begin(); it<=tmp.end(); it++) *it = tolower(*it);
+  return tmp;
+}
+//**********************************************************************
+string trim(string str)
+// Convert all character in string to lower case
+{
+  string tmp = str;
+  long number_of_char = 0;
+  for (size_t ii=0; ii<str.size(); ii++)
+    if (str[ii]!=' ' && str[ii]!='\t')
+    {
+      tmp[number_of_char]=str[ii];
+      number_of_char++;
+    }
+  tmp.resize(number_of_char);
+  return tmp;
+}
+
+//**********************************************************************
+double stringToDouble(string str)
+// Return the 1st doubles number read from the string "str". "str" should be a string containing a line of data.
+{
+  stringstream sst(str+" "); // add a blank at the end so the last data will be read
+  double val;
+  sst >> val;
+  return val;
 }
 

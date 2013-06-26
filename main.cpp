@@ -12,11 +12,13 @@
 #include "Phasespace_integrals.h"
 #include "parameters.h"
 #include "Stopwatch.h"
+#include "QGP_2to2_Scattering_Kinetic.h"
+#include "ParameterReader.h"
 
 using namespace std;
 
 
-int main()
+int main(int argc, char** argv)
 {
    Stopwatch sw; 
    sw.tic();
@@ -24,15 +26,23 @@ int main()
    int channel = 0;
    string filename;
    
+   ParameterReader* paraRdr = new ParameterReader();
+   paraRdr->readFromFile("parameters.dat");
+   paraRdr->readFromArguments(argc, argv);
+   
+   QGP_2to2_Scattering_Kinetic test(paraRdr);
+
    //Compton scattering
    filename = "QGP_2to2_Compton";
    channel = 1;
-   Calculate_emissionrates(channel, filename);
+   test.calculateEmissionrates(channel, filename);
+   //Calculate_emissionrates(channel, filename);
    
    //Pair Annihilation
    filename = "QGP_2to2_PairAnnihilation";
    channel = 2;
-   Calculate_emissionrates(channel, filename);
+   test.calculateEmissionrates(channel, filename);
+   //Calculate_emissionrates(channel, filename);
 
 /**********************************************************************/
 // passed test
