@@ -44,7 +44,7 @@ QGP_2to2_Scattering_Kinetic::QGP_2to2_Scattering_Kinetic(ParameterReader* paraRd
    n_qtilde = paraRdr->getVal("n_qtilde");
    double qtilde_i = paraRdr->getVal("qtilde_i");
    double qtilde_f = paraRdr->getVal("qtilde_max");
-   double dqtilde = (qtilde_f - qtilde_i)/(n_qtilde - 1);
+   double dqtilde = (qtilde_f - qtilde_i)/(n_qtilde - 1 + 1e-10);
    qtilde_pt = new double [n_qtilde];
    for(int i=0; i<n_qtilde; i++)
       qtilde_pt[i] = qtilde_i + i*dqtilde;
@@ -814,7 +814,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     double Im_trace2_eq = Impart_ComplexDivide(Re_Q03Tilde_dot_Q02primestar, Im_Q03Tilde_dot_Q02primestar, Re_trace2_eq_denominator, Im_trace2_eq_denominator);
     trace2_eq = -64.*s/2.*Re_trace2_eq;
     
-    result_ptr[0] = prefactor*(trace1_eq + trace2_eq + trace4_eq);
+    result_ptr[0] = prefactor*(0.0*trace1_eq + trace2_eq + 2.0*trace4_eq);
     //result = prefactor*16.*(u/t);
 
     //Viscous corrections
@@ -967,6 +967,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     double trace4_vis_3 = 16./Mag_Q03Tilde_dot_Q03Tilde_sq*trace4_vis_temp3;
     trace4_vis = trace4_vis_1 - trace4_vis_2 + trace4_vis_3;
 
+/*
     //trace of the 2nd + the 3rd terms
     double Re_Q03Tilde_dot_Sigma1Tilde = ((4*Power(k,2)*(2*Power(kprime,2) - 4*kprime*p 
                           + 2*Power(p,2) - s - t) - 12*k*(kprime - p)*(s + t) 
@@ -1225,6 +1226,8 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     double trace2_vis_2 = Repart_ComplexDivide(Re_Q03Tilde_dot_Sigma1primestar, Im_Q03Tilde_dot_Sigma1primestar, trace2_vis_Re_temp2, trace2_vis_Im_temp2) 
                         + Repart_ComplexDivide(Re_Q02primestar_dot_Sigma1Tilde, Im_Q02primestar_dot_Sigma1Tilde, trace2_vis_Re_temp2, trace2_vis_Im_temp2);
     trace2_vis = -64.*s/2.*(trace2_vis_1 - trace2_vis_2);
+    */
+    trace2_vis = 0.0;
 
     result_ptr[1] = prefactor*(trace1_vis + trace2_vis + trace4_vis);
     
