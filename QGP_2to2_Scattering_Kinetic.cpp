@@ -814,7 +814,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     double Im_trace2_eq = Impart_ComplexDivide(Re_Q03Tilde_dot_Q02primestar, Im_Q03Tilde_dot_Q02primestar, Re_trace2_eq_denominator, Im_trace2_eq_denominator);
     trace2_eq = -64.*s/2.*Re_trace2_eq;
     
-    result_ptr[0] = prefactor*(0.0*trace1_eq + trace2_eq + 2.0*trace4_eq);
+    result_ptr[0] = prefactor*(2.0*trace1_eq + trace2_eq + 0.0*trace4_eq);
     //result = prefactor*16.*(u/t);
 
     //Viscous corrections
@@ -1229,7 +1229,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     */
     trace2_vis = 0.0;
 
-    result_ptr[1] = prefactor*(trace1_vis + trace2_vis + trace4_vis);
+    result_ptr[1] = prefactor*(2.0*trace1_vis + trace2_vis + 0.0*trace4_vis);
     
     return;
 }
