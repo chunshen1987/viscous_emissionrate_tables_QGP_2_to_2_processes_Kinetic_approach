@@ -19,6 +19,14 @@ typedef struct
    double Im_C1;
 }Selfenergy_coefficients;
 
+class QGP_2to2_Scattering_Kinetic;
+
+struct CCallbackHolder
+{
+   QGP_2to2_Scattering_Kinetic* clsPtr;
+   void *params;
+};
+
 inline double Power(double x, int a);
 
 class QGP_2to2_Scattering_Kinetic
@@ -65,6 +73,7 @@ class QGP_2to2_Scattering_Kinetic
       void scale_gausspoints_st(double qtilde);
       void Integrate_E1(double qtilde, double s_tilde, double t_tilde, double* results);
       void Integrate_E2(double qtilde, double s_tilde, double t_tilde, double E1tilde, double* results);
+      double testFunc(double x, void* params);
       double viscous_integrand(double s_tilde, double t_tilde, double E1tilde, double E2tilde, double qtilde, double f0_E1, double f0_E2, double f0_E3);
 
       void get_quark_selfenergy_coefficients(double p_0_tilde, double p_i_tilde, Selfenergy_coefficients* Sigma_ptr);
@@ -82,6 +91,37 @@ class QGP_2to2_Scattering_Kinetic
       double Impart_ComplexMultiply(double Re1, double Im1, double Re2, double Im2);
       double Repart_ComplexDivide(double Re1, double Im1, double Re2, double Im2);
       double Impart_ComplexDivide(double Re1, double Im1, double Re2, double Im2);
+      
+      double eqRateintegrands(double E1tilde, void *params);
+      static double CCallback_eqRateintegrands(double x, void* params)
+      {
+         CCallbackHolder* h = static_cast<CCallbackHolder*>(params);
+         return h->clsPtr->eqRateintegrands(x, h->params);
+      }
+      double eqRateintegrandt(double E1tilde, void *params);
+      static double CCallback_eqRateintegrandt(double x, void* params)
+      {
+         CCallbackHolder* h = static_cast<CCallbackHolder*>(params);
+         return h->clsPtr->eqRateintegrandt(x, h->params);
+      }
+      double eqRateintegrandE1(double E1tilde, void *params);
+      static double CCallback_eqRateintegrandE1(double x, void* params)
+      {
+         CCallbackHolder* h = static_cast<CCallbackHolder*>(params);
+         return h->clsPtr->eqRateintegrandE1(x, h->params);
+      }
+      double eqRateintegrandE2(double E2, void *params);
+      static double CCallback_eqRateintegrandE2(double x, void* params)
+      {
+         CCallbackHolder* h = static_cast<CCallbackHolder*>(params);
+         return h->clsPtr->eqRateintegrandE2(x, h->params);
+      }
+      static double CCallback_test(double x, void* params)
+      {
+         CCallbackHolder* h = static_cast<CCallbackHolder*>(params);
+         return h->clsPtr->testFunc(x, h->params);
+      }
 };
+
 
 #endif

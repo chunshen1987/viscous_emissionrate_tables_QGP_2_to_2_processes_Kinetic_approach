@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <gsl/gsl_integration.h>
+
 #include "QGP_2to2_Scattering_Kinetic.h"
 #include "Physicalconstants.h"
 #include "ParameterReader.h"
@@ -14,6 +16,7 @@
 #include "Arsenal.h"
 
 using namespace std;
+
 
 QGP_2to2_Scattering_Kinetic::QGP_2to2_Scattering_Kinetic(ParameterReader* paraRdr_in)
 {
@@ -189,6 +192,27 @@ void QGP_2to2_Scattering_Kinetic::calculateEmissionrates(int channel_in, string 
        equilibriumTilde_results[i] = equilibrium_result_s*prefactor/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
 
        viscousTilde_results[i] = viscous_result_s*prefactor/(qtilde*qtilde)/pow(hbarC, 4); // convert units to 1/(GeV^2 fm^4) for the emission rates
+
+       p_cutoff = 0.0e0;
+       double s_min = 2*p_cutoff*p_cutoff;
+       double paramsPtr = qtilde;
+       CCallbackHolder *Callback_params = new CCallbackHolder;
+       Callback_params->clsPtr = this;
+       Callback_params->params = &paramsPtr;
+       int maxInteration = 1000;
+       gsl_integration_workspace *gsl_workSpace = gsl_integration_workspace_alloc(maxInteration);
+       double gslresult, gslerror;
+       gsl_function gslFunc;
+       gslFunc.function = this->CCallback_eqRateintegrands;
+       gslFunc.params = Callback_params;
+       
+       gsl_integration_qagiu(&gslFunc, s_min, 0, 1e-4, maxInteration, gsl_workSpace, &gslresult, &gslerror);
+
+       gsl_integration_workspace_free(gsl_workSpace);
+       delete Callback_params;
+       cout << equilibrium_result_s << endl;
+       cout << gslresult << "   " << gslerror << endl;
+
    }
    
    buildupEmissionrate2DTable();
@@ -318,6 +342,7 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E1(double qtilde, double s_tilde, do
 
    delete[] E1_pt;
    delete[] E1_weight;
+
 }
 
 void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, double t_tilde, double E1tilde, double* results)
@@ -335,7 +360,7 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, do
 
    if((b*b - a*c) >= 0) 
    {
-      double min_2 = (-b + sqrt(b*b - a*c))/(a + eps);
+      double min_2 = (-b + sqrt(b*b - a*c))/(a - eps);
       if(min_1 < min_2)
          E2_min = min_2;
       else
@@ -348,7 +373,7 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, do
          results[1] = 0.0e0;
          return;
       }
-   
+
       double common_factor;
 
       double* E2_pt = new double [n_E2];
@@ -356,7 +381,7 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, do
       
       for(int i=0; i<n_E2; i++)
       {
-         E2_pt[i] = E2_pt_standard[0][i];
+        E2_pt[i] = E2_pt_standard[0][i];
          E2_weight[i] = E2_weight_standard[0][i];
       }
       scale_gausspoints(n_E2, 2, 0.0, 0.0, E2_min, E2_max, E2_pt, E2_weight);
@@ -389,6 +414,7 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, do
 
       delete[] E2_pt;
       delete[] E2_weight;
+
    }
    else  // no kinematic phase space
    {
@@ -397,6 +423,183 @@ void QGP_2to2_Scattering_Kinetic::Integrate_E2(double qtilde, double s_tilde, do
    }
    results[0] = equilibrium_result;
    results[1] = viscous_result;
+}
+
+double QGP_2to2_Scattering_Kinetic::testFunc(double x, void *params)
+{
+    double alpha = ((double*)params)[0];
+    double f = sqrt(x*(1.-x))/(pow((x)*(1.0 - x), 0.5) + 1e-10);
+    return f;
+}
+
+double QGP_2to2_Scattering_Kinetic::eqRateintegrands(double s_tilde, void *params)
+{
+    double eps = 1e-100;
+    p_cutoff = 0.0;
+    double *par = (double*)params;
+    double qtilde = *par;
+
+    double t_min = - s_tilde + p_cutoff*p_cutoff;
+    double t_max = - p_cutoff*p_cutoff;
+    
+    double *paramsPtr = new double [2];
+    paramsPtr[0] = s_tilde;
+    paramsPtr[1] = qtilde;
+    CCallbackHolder *Callback_params = new CCallbackHolder;
+    Callback_params->clsPtr = this;
+    Callback_params->params = paramsPtr;
+    int maxInteration = 1000;
+    gsl_integration_workspace *gsl_workSpace = gsl_integration_workspace_alloc(maxInteration);
+    double gslresult, gslerror;
+    gsl_function gslFunc;
+    gslFunc.function = this->CCallback_eqRateintegrandt;
+    gslFunc.params = Callback_params;
+    
+    gsl_integration_qags(&gslFunc, t_min, t_max, 0, 1e-4, maxInteration, gsl_workSpace, &gslresult, &gslerror);
+
+    gsl_integration_workspace_free(gsl_workSpace);
+    delete Callback_params;
+    delete [] paramsPtr;
+
+    return(gslresult);
+}
+
+double QGP_2to2_Scattering_Kinetic::eqRateintegrandt(double t_tilde, void *params)
+{
+    double eps = 1e-100;
+    double *par = (double*)params;
+    double s_tilde = par[0];
+    double qtilde = par[1];
+
+    double E1_min;
+    double u_tilde = - s_tilde - t_tilde;
+    E1_min = (- u_tilde)/(4.*qtilde);
+
+    double *paramsPtr = new double [3];
+    paramsPtr[0] = s_tilde;
+    paramsPtr[1] = t_tilde;
+    paramsPtr[2] = qtilde;
+    CCallbackHolder *Callback_params = new CCallbackHolder;
+    Callback_params->clsPtr = this;
+    Callback_params->params = paramsPtr;
+    int maxInteration = 1000;
+    gsl_integration_workspace *gsl_workSpace = gsl_integration_workspace_alloc(maxInteration);
+    double gslresult, gslerror;
+    gsl_function gslFunc;
+    gslFunc.function = this->CCallback_eqRateintegrandE1;
+    gslFunc.params = Callback_params;
+    
+    gsl_integration_qagiu(&gslFunc, E1_min, 0, 1e-4, maxInteration, gsl_workSpace, &gslresult, &gslerror);
+
+    gsl_integration_workspace_free(gsl_workSpace);
+    delete Callback_params;
+    delete [] paramsPtr;
+
+    return(gslresult);
+}
+
+double QGP_2to2_Scattering_Kinetic::eqRateintegrandE1(double E1tilde, void *params)
+{
+    double eps = 1e-100;
+    double result;
+    double *par = (double*)params;
+    double s_tilde = par[0];
+    double t_tilde = par[1];
+    double qtilde = par[2];
+
+    double E2_min;
+    double E2_max;
+    double min_1 = (- t_tilde)/(4.*qtilde);
+
+    double a = - (s_tilde + t_tilde)*(s_tilde + t_tilde);
+    double b = qtilde*((s_tilde + t_tilde)*(s_tilde)) + E1tilde*(-t_tilde)*(s_tilde + t_tilde);
+    double c = - (qtilde*s_tilde + E1tilde*t_tilde)*(qtilde*s_tilde + E1tilde*t_tilde) + s_tilde*t_tilde*(s_tilde+t_tilde);
+
+    if((b*b - a*c) >= 0) 
+    {
+       double min_2 = (-b + sqrt(b*b - a*c))/(a - eps);
+       if(min_1 < min_2)
+          E2_min = min_2;
+       else
+          E2_min = min_1;
+       E2_max = (-b - sqrt(b*b - a*c))/(a + eps);
+
+       if(E2_max < E2_min) return(0.0);
+
+       double *paramsPtr = new double [7];
+       paramsPtr[0] = s_tilde;
+       paramsPtr[1] = t_tilde;
+       paramsPtr[2] = qtilde;
+       paramsPtr[3] = E1tilde;
+       paramsPtr[4] = a;
+       paramsPtr[5] = b;
+       paramsPtr[6] = c;
+       CCallbackHolder *Callback_params = new CCallbackHolder;
+       Callback_params->clsPtr = this;
+       Callback_params->params = paramsPtr;
+       int maxInteration = 1000;
+       gsl_integration_workspace *gsl_workSpace = gsl_integration_workspace_alloc(maxInteration);
+       double gslresult, gslerror;
+       gsl_function gslFunc;
+       gslFunc.function = this->CCallback_eqRateintegrandE2;
+       gslFunc.params = Callback_params;
+       
+       gsl_integration_qags(&gslFunc, E2_min, E2_max, 0, 1e-4, maxInteration, gsl_workSpace, &gslresult, &gslerror);
+
+       double f0_E1;
+       if(channel == 1)
+          f0_E1 = Bose_distribution(E1tilde);
+       else
+          f0_E1 = Fermi_distribution(E1tilde);
+       gslresult = gslresult*f0_E1;
+       //gslerror = gslerror*f0_E1;
+
+       gsl_integration_workspace_free(gsl_workSpace);
+       delete Callback_params;
+       delete [] paramsPtr;
+
+       result = gslresult;
+    }
+    else  // no kinematic phase space
+    {
+       result = 0.0e0;
+    }
+    return(result);
+}
+
+double QGP_2to2_Scattering_Kinetic::eqRateintegrandE2(double E2, void *params)
+{
+    double eps = 1e-10;
+    double *par = (double*)params;
+    double s_tilde = par[0];
+    double t_tilde = par[1];
+    double qtilde = par[2];
+    double E1tilde = par[3];
+    double a = par[4];
+    double b = par[5];
+    double c = par[6];
+
+    double* Matrix_sq_ptr = new double [2];
+    Matrix_elements_sq(s_tilde, t_tilde, E1tilde, E2, qtilde, Matrix_sq_ptr);
+    double Matrix_sq_eq = Matrix_sq_ptr[0];
+    delete [] Matrix_sq_ptr;
+
+    double f0_E2, f0_E3;
+    double common_factor;
+    if(channel == 1) //Compton Scattering
+    {
+       f0_E2 = Fermi_distribution(E2);
+       f0_E3 = Fermi_distribution(E1tilde + E2 - qtilde);
+       common_factor = f0_E2*(1 - f0_E3)/(sqrt(abs(a*E2*E2 + 2*b*E2 + c)) + eps);
+    }
+    else if(channel == 2) //pair annihilation
+    {
+       f0_E2 = Fermi_distribution(E2);
+       f0_E3 = Bose_distribution(E1tilde + E2 - qtilde);
+       common_factor = f0_E2*(1 + f0_E3)/(sqrt(abs(a*E2*E2 + 2*b*E2 + c)) + eps);
+    }
+    double equilibrium_result = common_factor*Matrix_sq_eq;
+    return(equilibrium_result);
 }
 
 double QGP_2to2_Scattering_Kinetic::viscous_integrand(double s_tilde, double t_tilde, double E1tilde, double E2tilde, double qtilde, double f0_E1, double f0_E2, double f0_E3)
@@ -492,12 +695,18 @@ double QGP_2to2_Scattering_Kinetic::quark_selfenergy_Q(double x)
 
 double QGP_2to2_Scattering_Kinetic::Bose_distribution(double Etilde)
 {
-   return(1.0/(exp(Etilde)-1.0));
+    if(Etilde > 100)
+       return(0.0);
+    else
+       return(1.0/(exp(Etilde)-1.0));
 }
 
 double QGP_2to2_Scattering_Kinetic::Fermi_distribution(double Etilde)
 {
-    return(1.0/(exp(Etilde) + 1.0));
+    if(Etilde > 100)
+       return(0.0);
+    else
+       return(1.0/(exp(Etilde) + 1.0));
 }
 
 double QGP_2to2_Scattering_Kinetic::deltaf_chi(double ptilde)
@@ -594,10 +803,10 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Compton(double s, double t,
 
     trace2_eq = -64.*(s + t)/2.*Re_trace2_temp;
 
-    result_ptr[0] = prefactor*(trace1_eq + trace2_eq + trace4_eq);
-    //if(result<0.0)
+    result_ptr[0] = prefactor*(trace1_eq + 0.0*trace2_eq + trace4_eq);
+    //if(result_ptr[0]<0.0)
     //{
-    //  cout << result << endl;
+    //  cout << trace1_eq << "   " << trace2_eq << "   " << trace4_eq << endl;
     //  exit(0);
     //}
 
@@ -695,7 +904,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Compton(double s, double t,
     double trace2_vis_temp2 = 1./s*Repart_ComplexDivide(Re_Q0_dot_Sigma1primestar, Im_Q0_dot_Sigma1primestar, Re_Q02primestar_dot_Q02primestar, Im_Q02primestar_dot_Q02primestar);
     trace2_vis = -64.*(s + t)/2.*(trace2_vis_temp1 - trace2_vis_temp2);
 
-    result_ptr[1] = prefactor*(trace1_vis + trace2_vis + trace4_vis);
+    result_ptr[1] = prefactor*(trace1_vis + 0.0*trace2_vis + trace4_vis);
 
     return;
 }
@@ -814,7 +1023,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     double Im_trace2_eq = Impart_ComplexDivide(Re_Q03Tilde_dot_Q02primestar, Im_Q03Tilde_dot_Q02primestar, Re_trace2_eq_denominator, Im_trace2_eq_denominator);
     trace2_eq = -64.*s/2.*Re_trace2_eq;
     
-    result_ptr[0] = prefactor*(2.0*trace1_eq + trace2_eq + 0.0*trace4_eq);
+    result_ptr[0] = prefactor*(2.0*trace1_eq + 0.0*trace2_eq + 0.0*trace4_eq);
     //result = prefactor*16.*(u/t);
 
     //Viscous corrections
@@ -1229,7 +1438,7 @@ void QGP_2to2_Scattering_Kinetic::Matrix_elements_sq_Annihilation(double s, doub
     */
     trace2_vis = 0.0;
 
-    result_ptr[1] = prefactor*(2.0*trace1_vis + trace2_vis + 0.0*trace4_vis);
+    result_ptr[1] = prefactor*(2.0*trace1_vis + 0.0*trace2_vis + 0.0*trace4_vis);
     
     return;
 }

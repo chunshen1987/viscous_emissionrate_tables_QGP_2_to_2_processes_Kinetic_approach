@@ -11,11 +11,11 @@
 ##  
 
 CC := g++
-CFLAGS = -O3
+CFLAGS = -g -I/sw/include
 
 RM		=	rm -f
 O               =       .o
-LDFLAGS         =       $(CFLAGS)
+LDFLAGS         =       $(CFLAGS) -L/sw/lib -lgsl -lgslcblas
 SYSTEMFILES     =       $(SRCGNU)
 
 # --------------- Files involved ------------------
